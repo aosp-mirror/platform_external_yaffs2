@@ -37,7 +37,7 @@ typedef unsigned char __u8;
 typedef unsigned short __u16;
 typedef unsigned __u32;
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
 typedef long long loff_t;
 #endif
 
