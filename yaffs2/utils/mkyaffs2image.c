@@ -211,8 +211,11 @@ static void little_to_big_endian(yaffs_PackedTags2 *pt)
 
 static int write_chunk(__u8 *data, __u32 objId, __u32 chunkId, __u32 nBytes)
 {
+	char spare[spareSize];
 	yaffs_ExtendedTags t;
-	yaffs_PackedTags2 pt;
+	yaffs_PackedTags2 *pt = (yaffs_PackedTags2 *)spare;
+
+	memset(spare, 0xff, spareSize);
 
 	error = write(outFile,data,chunkSize);
 	if(error < 0) return error;
@@ -232,15 +235,15 @@ static int write_chunk(__u8 *data, __u32 objId, __u32 chunkId, __u32 nBytes)
 
 	nPages++;
 
-	yaffs_PackTags2(&pt,&t);
+	yaffs_PackTags2(pt,&t);
 
 	if (convert_endian)
 	{
-    	    little_to_big_endian(&pt);
+		little_to_big_endian(pt);
 	}
 	
 //	return write(outFile,&pt,sizeof(yaffs_PackedTags2));
-	return write(outFile,&pt,spareSize);
+	return write(outFile,spare, spareSize);
 	
 }
 
