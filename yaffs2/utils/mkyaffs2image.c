@@ -45,8 +45,8 @@ unsigned yaffs_traceMask=0;
 
 #define MAX_OBJECTS 50000
 
-#define chunkSize 2048
-#define spareSize 64
+unsigned chunkSize = 2048;
+unsigned spareSize = 64;
 
 const char * mkyaffsimage_c_version = "$Id: mkyaffs2image.c,v 1.2 2005/12/13 00:34:58 tpoynor Exp $";
 
@@ -458,8 +458,10 @@ static int process_directory(int parent, const char *path, int fixstats)
 static void usage(void)
 {
 	fprintf(stderr,"mkyaffs2image: image building tool for YAFFS2 built "__DATE__"\n");
-	fprintf(stderr,"usage: mkyaffs2image [-f] dir image_file [convert]\n");
+	fprintf(stderr,"usage: mkyaffs2image [-f] [-c <size>] [-s <size>] dir image_file [convert]\n");
 	fprintf(stderr,"           -f         fix file stat (mods, user, group) for device\n");
+	fprintf(stderr,"           -c <size>  set the chunk (NAND page) size. default: 2048\n");
+	fprintf(stderr,"           -s <size>  set the spare (NAND OOB) size. default: 64\n");
 	fprintf(stderr,"           dir        the directory tree to be converted\n");
 	fprintf(stderr,"           image_file the output file to hold the image\n");
 	fprintf(stderr,"           'convert'  produce a big-endian image from a little-endian machine\n");
@@ -473,15 +475,26 @@ int main(int argc, char *argv[])
 	char *image;
 	char *dir;
 
-	while ((opt = getopt(argc, argv, "f")) != -1) {
+	while ((opt = getopt(argc, argv, "fc:s:")) != -1) {
 		switch (opt) {
 		case 'f':
 			fixstats = 1;
+			break;
+		case 'c':
+			chunkSize = (unsigned)strtoul(optarg, NULL, 0);
+			break;
+		case 's':
+			spareSize = (unsigned)strtoul(optarg, NULL, 0);
 			break;
 		default:
 			usage();
 			exit(1);
 		}
+	}
+
+	if (!chunkSize || !spareSize) {
+		usage();
+		exit(1);
 	}
 
 	if ((argc - optind < 2) || (argc - optind > 3)) {
