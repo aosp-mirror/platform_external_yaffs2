@@ -540,7 +540,7 @@ int main(int argc, char *argv[])
         
         if((len >= 4) && (!strcmp(dir + len - 4, "data"))) {
             source_path_len = len - 4;
-        } else if((len >= 7) && (!strcmp(dir + len - 6, "system"))) {
+        } else if((len >= 6) && (!strcmp(dir + len - 6, "system"))) {
             source_path_len = len - 6;
         } else {            
             fprintf(stderr,"Fixstats (-f) option requested but filesystem is not data or android!\n");
