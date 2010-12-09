@@ -19,4 +19,4 @@ LOCAL_MODULE := mkyaffs2image
 
 include $(BUILD_HOST_EXECUTABLE)
 
-$(call dist-for-goals,droid,$(LOCAL_BUILT_MODULE))
+$(call dist-for-goals, dist_files, $(LOCAL_BUILT_MODULE))
