@@ -310,8 +310,6 @@ static void object_header_little_to_big_endian(yaffs_ObjectHeader* oh)
     oh->roomToGrow[1] = SWAP32(oh->roomToGrow[1]);
     oh->roomToGrow[2] = SWAP32(oh->roomToGrow[2]);
     oh->roomToGrow[3] = SWAP32(oh->roomToGrow[3]);
-    oh->roomToGrow[4] = SWAP32(oh->roomToGrow[4]);
-    oh->roomToGrow[5] = SWAP32(oh->roomToGrow[5]);
 #else
     oh->roomToGrow[0] = SWAP32(oh->roomToGrow[0]);
     oh->roomToGrow[1] = SWAP32(oh->roomToGrow[1]);
@@ -323,8 +321,6 @@ static void object_header_little_to_big_endian(yaffs_ObjectHeader* oh)
     oh->roomToGrow[7] = SWAP32(oh->roomToGrow[7]);
     oh->roomToGrow[8] = SWAP32(oh->roomToGrow[8]);
     oh->roomToGrow[9] = SWAP32(oh->roomToGrow[9]);
-    oh->roomToGrow[10] = SWAP32(oh->roomToGrow[10]);
-    oh->roomToGrow[11] = SWAP32(oh->roomToGrow[11]);
 #endif
 }
 
