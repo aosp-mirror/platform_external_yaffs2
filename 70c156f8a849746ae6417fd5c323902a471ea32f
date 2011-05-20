@@ -1,0 +1,8 @@
+Change-Id: I70c156f8a849746ae6417fd5c323902a471ea32f
+Code-Review+2: Jean-Baptiste Queru <jbq@google.com>
+Verified+1: Jean-Baptiste Queru <jbq@google.com>
+Submitted-by: Jean-Baptiste Queru <jbq@google.com>
+Submitted-at: Mon, 24 Aug 2009 10:44:41 -0700
+Reviewed-on: https://review.source.android.com/11135
+Project: platform/external/yaffs2
+Branch: refs/heads/master
