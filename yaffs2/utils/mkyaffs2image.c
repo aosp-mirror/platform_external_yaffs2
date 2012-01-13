@@ -32,6 +32,14 @@
 #include <string.h>
 #include <unistd.h>
 
+#define XATTR_NAME_SELINUX "security.selinux"
+#include <selinux/selinux.h>
+#include <selinux/label.h>
+
+static struct selabel_handle *sehnd;
+static unsigned int seprefixlen;
+static char *mntpoint;
+
 #include <private/android_filesystem_config.h>
 
 #include "yaffs_ecc.h"
@@ -247,12 +255,21 @@ static int write_chunk(__u8 *data, __u32 objId, __u32 chunkId, __u32 nBytes)
 	
 }
 
-static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, int parent, const char *name, int equivalentObj, const char * alias)
+static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, int parent, const char *name, int equivalentObj, const char * alias, const char *secontext)
 {
 	__u8 bytes[chunkSize];
 	
 	
 	yaffs_ObjectHeader *oh = (yaffs_ObjectHeader *)bytes;
+	char *xb = (char *)bytes + sizeof(*oh);
+	int xnamelen = strlen(XATTR_NAME_SELINUX) + 1;
+	int xvalsize = 0;
+	int xreclen = 0;
+
+	if (secontext) {
+		xvalsize = strlen(secontext) + 1;
+		xreclen = sizeof(int) + xnamelen + xvalsize;
+	}
 	
 	memset(bytes,0xff,sizeof(bytes));
 	
@@ -261,7 +278,14 @@ static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, in
 	oh->parentObjectId = parent;
 	
 	strncpy(oh->name,name,YAFFS_MAX_NAME_LENGTH);
-	
+
+	if (xreclen) {
+		memcpy(xb, &xreclen, sizeof(int));
+		xb += sizeof(int);
+		strcpy(xb, XATTR_NAME_SELINUX);
+		xb += xnamelen;
+		memcpy(xb, secontext, xvalsize);
+	}
 	
 	if(t != YAFFS_OBJECT_TYPE_HARDLINK)
 	{
@@ -310,6 +334,7 @@ static int process_directory(int parent, const char *path, int fixstats)
 
 	DIR *dir;
 	struct dirent *entry;
+	char *secontext = NULL;
 
 	nDirectories++;
 	
@@ -325,6 +350,7 @@ static int process_directory(int parent, const char *path, int fixstats)
 			   strcmp(entry->d_name,".."))
  			{
  				char full_name[500];
+				char *suffix, dest_name[500];
 				struct stat stats;
 				int equivalentObj;
 				int newObj;
@@ -332,7 +358,19 @@ static int process_directory(int parent, const char *path, int fixstats)
 				sprintf(full_name,"%s/%s",path,entry->d_name);
 				
 				lstat(full_name,&stats);
-				
+
+				if (sehnd) {
+					suffix = full_name + seprefixlen;
+					snprintf(dest_name, sizeof dest_name,
+						 "%s%s", mntpoint, suffix);
+					if (selabel_lookup(sehnd, &secontext, dest_name, stats.st_mode) < 0) {
+						perror("selabel_lookup");
+						exit(1);
+					}
+					if (secontext)
+						printf("Labeling %s as %s\n", dest_name, secontext);
+				}
+
 				if(S_ISLNK(stats.st_mode) ||
 				    S_ISREG(stats.st_mode) ||
 				    S_ISDIR(stats.st_mode) ||
@@ -356,7 +394,7 @@ static int process_directory(int parent, const char *path, int fixstats)
 					{
 					 	/* we need to make a hard link */
 					 	//printf("hard link to object %d\n",equivalentObj);
-						error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_HARDLINK, &stats, parent, entry->d_name, equivalentObj, NULL);
+						error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_HARDLINK, &stats, parent, entry->d_name, equivalentObj, NULL, secontext);
 					}
 					else 
 					{
@@ -373,13 +411,13 @@ static int process_directory(int parent, const char *path, int fixstats)
 							readlink(full_name,symname,sizeof(symname) -1);
 						
 							//printf("symlink to \"%s\"\n",symname);
-							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SYMLINK, &stats, parent, entry->d_name, -1, symname);
+							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SYMLINK, &stats, parent, entry->d_name, -1, symname, secontext);
 
 						}
 						else if(S_ISREG(stats.st_mode))
 						{
 							//printf("file, ");
-							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_FILE, &stats, parent, entry->d_name, -1, NULL);
+							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_FILE, &stats, parent, entry->d_name, -1, NULL, secontext);
 
 							if(error >= 0)
 							{
@@ -415,27 +453,27 @@ static int process_directory(int parent, const char *path, int fixstats)
 						else if(S_ISSOCK(stats.st_mode))
 						{
 							//printf("socket\n");
-							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL);
+							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL, secontext);
 						}
 						else if(S_ISFIFO(stats.st_mode))
 						{
 							//printf("fifo\n");
-							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL);
+							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL, secontext);
 						}
 						else if(S_ISCHR(stats.st_mode))
 						{
 							//printf("character device\n");
-							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL);
+							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL, secontext);
 						}
 						else if(S_ISBLK(stats.st_mode))
 						{
 							//printf("block device\n");
-							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL);
+							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_SPECIAL, &stats, parent, entry->d_name, -1, NULL, secontext);
 						}
 						else if(S_ISDIR(stats.st_mode))
 						{
 							//printf("directory\n");
-							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, parent, entry->d_name, -1, NULL);
+							error =  write_object_header(newObj, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, parent, entry->d_name, -1, NULL, secontext);
 // NCB modified 10/9/2001				process_directory(1,full_name);
 							process_directory(newObj,full_name,fixstats);
 						}
@@ -447,7 +485,6 @@ static int process_directory(int parent, const char *path, int fixstats)
 				}
 			}
 		}
-
 		closedir(dir);
 	}
 	
@@ -458,12 +495,14 @@ static int process_directory(int parent, const char *path, int fixstats)
 static void usage(void)
 {
 	fprintf(stderr,"mkyaffs2image: image building tool for YAFFS2 built "__DATE__"\n");
-	fprintf(stderr,"usage: mkyaffs2image [-f] [-c <size>] [-s <size>] dir image_file [convert]\n");
+	fprintf(stderr,"usage: mkyaffs2image [-f] [-c <size>] [-s <size>] dir image_file [file_contexts mountpoint] [convert]\n");
 	fprintf(stderr,"           -f         fix file stat (mods, user, group) for device\n");
 	fprintf(stderr,"           -c <size>  set the chunk (NAND page) size. default: 2048\n");
 	fprintf(stderr,"           -s <size>  set the spare (NAND OOB) size. default: 64\n");
 	fprintf(stderr,"           dir        the directory tree to be converted\n");
 	fprintf(stderr,"           image_file the output file to hold the image\n");
+	fprintf(stderr,"           file_contexts the file contexts configuration used to assign SELinux file context attributes\n");
+	fprintf(stderr,"           mountpoint the directory where this image be mounted on the device\n");
 	fprintf(stderr,"           'convert'  produce a big-endian image from a little-endian machine\n");
 }
 
@@ -474,6 +513,7 @@ int main(int argc, char *argv[])
 	int opt;
 	char *image;
 	char *dir;
+	char *secontext = NULL;
 
 	while ((opt = getopt(argc, argv, "fc:s:")) != -1) {
 		switch (opt) {
@@ -497,20 +537,37 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ((argc - optind < 2) || (argc - optind > 3)) {
+	if ((argc - optind < 2) || (argc - optind > 4)) {
 		usage();
 		exit(1);
 	}
 
 	dir = argv[optind];
+	seprefixlen = strlen(dir);
 	image = argv[optind + 1];
 
 	if (optind + 2 < argc) {
 		if (!strncmp(argv[optind + 2], "convert", strlen("convert")))
 			convert_endian = 1;
 		else {
-			usage();
-			exit(1);
+			struct selinux_opt seopts[] = {
+				{ SELABEL_OPT_PATH, argv[optind + 2] }
+			};
+			sehnd = selabel_open(SELABEL_CTX_FILE, seopts, 1);
+			if (!sehnd) {
+				perror(argv[optind + 2]);
+				usage();
+				exit(1);
+			}
+			if (optind + 3 >= argc) {
+				usage();
+				exit(1);
+			}
+			mntpoint = argv[optind + 3];
+			if (optind + 4 < argc) {
+				if (!strncmp(argv[optind + 4], "convert", strlen("convert")))
+					convert_endian = 1;
+			}
 		}
 	}
 
@@ -550,7 +607,14 @@ int main(int argc, char *argv[])
     }
     
 	//printf("Processing directory %s into image file %s\n",dir,image);
-	error =  write_object_header(1, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, 1,"", -1, NULL);
+    if (sehnd) {
+	    if (selabel_lookup(sehnd, &secontext, mntpoint, stats.st_mode) < 0) {
+		    perror("selabel_lookup");
+		    exit(1);
+	    }
+    }
+
+    error =  write_object_header(1, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, 1,"", -1, NULL, secontext);
 	if(error)
 	error = process_directory(YAFFS_OBJECTID_ROOT,dir,fixstats);
 	

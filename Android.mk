@@ -17,6 +17,8 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/yaffs2
 
 LOCAL_MODULE := mkyaffs2image
 
+LOCAL_STATIC_LIBRARIES := libselinux
+
 include $(BUILD_HOST_EXECUTABLE)
 
 $(call dist-for-goals, dist_files, $(LOCAL_BUILT_MODULE))
