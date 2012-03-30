@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAEcX///9w\u003d",
+        "filename": "yaffs2/utils/mkyaffs2image.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1002975
+      },
+      "writtenOn": "2012-03-30T23:18:56Z",
+      "side": 1,
+      "message": "This code is in the style of the original, but the original seems to lack error checking.  Might as well check the return value for snprintf here.",
+      "revId": "81df4f9f1b60ca2777bb253f1dc5c7d501ee1470",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAEcX///9s\u003d",
+        "filename": "yaffs2/utils/mkyaffs2image.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1002975
+      },
+      "writtenOn": "2012-03-30T23:18:56Z",
+      "side": 1,
+      "message": "Is this just for debugging? Seems like it might get noisy.",
+      "revId": "81df4f9f1b60ca2777bb253f1dc5c7d501ee1470",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889",
+      "unresolved": false
+    }
+  ]
+}
