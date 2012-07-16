@@ -382,12 +382,26 @@ static int process_directory(int parent, const char *path, int fixstats)
 							mntpoint, suffix);
 						exit(1);
 					}
-					if (selabel_lookup(sehnd, &secontext,
-							   dest_name,
-							   stats.st_mode) < 0) {
-						perror("selabel_lookup");
-						exit(1);
+
+					char *sepath = NULL;
+					if (dest_name[0] == '/')
+					        sepath = strdup(dest_name);
+					else if (asprintf(&sepath, "/%s", dest_name) < 0)
+                                                sepath = NULL;
+
+					if (!sepath) {
+					        perror("malloc");
+					        exit(1);
 					}
+
+					if (selabel_lookup(sehnd, &secontext,
+							   sepath,
+							   stats.st_mode) < 0) {
+					        perror("selabel_lookup");
+					        free(sepath);
+					        exit(1);
+					}
+					free(sepath);
 				}
 #endif
 
@@ -636,10 +650,25 @@ int main(int argc, char *argv[])
 	//printf("Processing directory %s into image file %s\n",dir,image);
 #ifdef HAVE_SELINUX
     if (sehnd) {
-	    if (selabel_lookup(sehnd, &secontext, mntpoint, stats.st_mode) < 0) {
-		    perror("selabel_lookup");
-		    exit(1);
-	    }
+
+        char *sepath = NULL;
+        if (mntpoint[0] == '/')
+	    sepath = strdup(mntpoint);
+        else if (asprintf(&sepath, "/%s", mntpoint) < 0)
+            sepath = NULL;
+
+        if (!sepath) {
+	    perror("malloc");
+	    exit(1);
+	}
+
+	if (selabel_lookup(sehnd, &secontext, sepath, stats.st_mode) < 0) {
+	    perror("selabel_lookup");
+	    free(sepath);
+	    exit(1);
+	}
+
+	free(sepath);
     }
 #endif
 
