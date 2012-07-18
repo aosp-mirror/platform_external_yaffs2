@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAHbH////8\u003d",
+        "filename": "yaffs2/utils/mkyaffs2image.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1013887
+      },
+      "writtenOn": "2012-07-18T02:02:56Z",
+      "side": 1,
+      "message": "The \"if (!sepath)\" check right after this covers the error case. If memory allocation wasn\u0027t possible, or some other error occurs, asprintf will return -1 and the contents of sepath will remain undefined. This also covers the error case possible with the strdup.",
+      "parentUuid": "AAAHZn///6A\u003d",
+      "revId": "a4fb71c1bd2b8a15e4bcc08b97d388edffa456e5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAHZn///50\u003d",
         "filename": "yaffs2/utils/mkyaffs2image.c",
         "patchSetId": 1
