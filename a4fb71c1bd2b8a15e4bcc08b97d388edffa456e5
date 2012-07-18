@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAHZn///6A\u003d",
+        "filename": "yaffs2/utils/mkyaffs2image.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1003966
+      },
+      "writtenOn": "2012-07-18T01:47:38Z",
+      "side": 1,
+      "message": "Check return value on asprintf. Per man asprintf, using the sepath value is undefined if asprintf returns an error.",
+      "revId": "a4fb71c1bd2b8a15e4bcc08b97d388edffa456e5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAHZn///50\u003d",
+        "filename": "yaffs2/utils/mkyaffs2image.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1003966
+      },
+      "writtenOn": "2012-07-18T01:47:38Z",
+      "side": 1,
+      "message": "check asprintf return value.",
+      "revId": "a4fb71c1bd2b8a15e4bcc08b97d388edffa456e5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889",
+      "unresolved": false
+    }
+  ]
+}
