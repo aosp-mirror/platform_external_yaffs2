@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAHbX////8\u003d",
+        "filename": "yaffs2/utils/mkyaffs2image.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1013433
+      },
+      "writtenOn": "2012-07-18T02:29:54Z",
+      "side": 1,
+      "message": "The Bionic implementation sets str to NULL. Check file bionic/libc/stdio/asprintf.c line  55.",
+      "parentUuid": "AAAHbH////8\u003d",
+      "revId": "a4fb71c1bd2b8a15e4bcc08b97d388edffa456e5",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAHZn///50\u003d",
         "filename": "yaffs2/utils/mkyaffs2image.c",
         "patchSetId": 1
