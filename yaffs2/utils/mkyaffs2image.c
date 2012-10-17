@@ -32,7 +32,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef HAVE_SELINUX
 #define XATTR_NAME_SELINUX "security.selinux"
 #include <selinux/selinux.h>
 #include <selinux/label.h>
@@ -40,7 +39,6 @@
 static struct selabel_handle *sehnd;
 static unsigned int seprefixlen;
 static char *mntpoint;
-#endif
 
 #include <private/android_filesystem_config.h>
 
@@ -263,7 +261,6 @@ static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, in
 	
 	
 	yaffs_ObjectHeader *oh = (yaffs_ObjectHeader *)bytes;
-#ifdef HAVE_SELINUX
 	char *xb = (char *)bytes + sizeof(*oh);
 	int xnamelen = strlen(XATTR_NAME_SELINUX) + 1;
 	int xvalsize = 0;
@@ -273,7 +270,6 @@ static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, in
 		xvalsize = strlen(secontext) + 1;
 		xreclen = sizeof(int) + xnamelen + xvalsize;
 	}
-#endif
 	
 	memset(bytes,0xff,sizeof(bytes));
 	
@@ -283,7 +279,6 @@ static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, in
 	
 	strncpy(oh->name,name,YAFFS_MAX_NAME_LENGTH);
 
-#ifdef HAVE_SELINUX
 	if (xreclen) {
 		memcpy(xb, &xreclen, sizeof(int));
 		xb += sizeof(int);
@@ -291,7 +286,6 @@ static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, in
 		xb += xnamelen;
 		memcpy(xb, secontext, xvalsize);
 	}
-#endif
 	
 	if(t != YAFFS_OBJECT_TYPE_HARDLINK)
 	{
@@ -356,10 +350,8 @@ static int process_directory(int parent, const char *path, int fixstats)
 			   strcmp(entry->d_name,".."))
  			{
  				char full_name[500];
-#ifdef HAVE_SELINUX
 				char *suffix, dest_name[500];
 				int ret;
-#endif
 				struct stat stats;
 				int equivalentObj;
 				int newObj;
@@ -368,7 +360,6 @@ static int process_directory(int parent, const char *path, int fixstats)
 				
 				lstat(full_name,&stats);
 
-#ifdef HAVE_SELINUX
 				if (sehnd) {
 					suffix = full_name + seprefixlen;
 					ret = snprintf(dest_name,
@@ -403,7 +394,6 @@ static int process_directory(int parent, const char *path, int fixstats)
 					}
 					free(sepath);
 				}
-#endif
 
 				if(S_ISLNK(stats.st_mode) ||
 				    S_ISREG(stats.st_mode) ||
@@ -577,16 +567,13 @@ int main(int argc, char *argv[])
 	}
 
 	dir = argv[optind];
-#ifdef HAVE_SELINUX
 	seprefixlen = strlen(dir);
-#endif
 	image = argv[optind + 1];
 
 	if (optind + 2 < argc) {
 		if (!strncmp(argv[optind + 2], "convert", strlen("convert")))
 			convert_endian = 1;
 		else {
-#ifdef HAVE_SELINUX
 			struct selinux_opt seopts[] = {
 				{ SELABEL_OPT_PATH, argv[optind + 2] }
 			};
@@ -605,10 +592,6 @@ int main(int argc, char *argv[])
 				if (!strncmp(argv[optind + 4], "convert", strlen("convert")))
 					convert_endian = 1;
 			}
-#else
-			usage();
-			exit(1);
-#endif
 		}
 	}
 
@@ -648,7 +631,6 @@ int main(int argc, char *argv[])
     }
     
 	//printf("Processing directory %s into image file %s\n",dir,image);
-#ifdef HAVE_SELINUX
     if (sehnd) {
 
         char *sepath = NULL;
@@ -670,7 +652,6 @@ int main(int argc, char *argv[])
 
 	free(sepath);
     }
-#endif
 
     error =  write_object_header(1, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, 1,"", -1, NULL, secontext);
 	if(error)

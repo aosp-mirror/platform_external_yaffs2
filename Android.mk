@@ -17,11 +17,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/yaffs2
 
 LOCAL_MODULE := mkyaffs2image
 
-ifeq ($(HAVE_SELINUX), true)
-LOCAL_C_INCLUDES += external/libselinux/include
-LOCAL_STATIC_LIBRARIES += libselinux
-LOCAL_CFLAGS += -DHAVE_SELINUX
-endif # HAVE_SELINUX
+LOCAL_STATIC_LIBRARIES := libselinux
 
 include $(BUILD_HOST_EXECUTABLE)
 
