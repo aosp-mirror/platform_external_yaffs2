@@ -325,8 +325,9 @@ static int write_object_header(int objId, yaffs_ObjectType t, struct stat *s, in
 
 static void fix_stat(const char *path, struct stat *s)
 {
+    uint64_t capabilities;
     path += source_path_len;
-    fs_config(path, S_ISDIR(s->st_mode), &s->st_uid, &s->st_gid, &s->st_mode);
+    fs_config(path, S_ISDIR(s->st_mode), &s->st_uid, &s->st_gid, &s->st_mode, &capabilities);
 }
 
 static int process_directory(int parent, const char *path, int fixstats)
