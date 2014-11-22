@@ -77,11 +77,7 @@ static int outFile;
 
 static int error;
 
-#ifdef HAVE_BIG_ENDIAN
-static int convert_endian = 1;
-#elif defined(HAVE_LITTLE_ENDIAN)
 static int convert_endian = 0;
-#endif
 
 static int obj_compare(const void *a, const void * b)
 {
